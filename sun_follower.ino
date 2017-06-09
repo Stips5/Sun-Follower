@@ -22,6 +22,8 @@ TO DO
 #define DESNO 2   //zeleni
 #define DOLI 3    //plavi
 
+#define COMMON_PIN 2
+
 //SOLARNI PANEL
 #define PANEL 5
 
@@ -97,6 +99,9 @@ void spCalculation(int[], int *, int *);
 //TESTS 
 void secondsCounter();
 void onRecieved();
+void serialEvent();
+
+void senzor();
 //////////////////////////////////////////////////////////////
 ///////////////////////////////////////////////////////SETUP
 /////////////////////////////////////////////////////////
@@ -155,18 +160,24 @@ void setup()
 //////////////////////////////////////////////////////////
 
 
-void loop() {
+void loop() 
+{
 
   int val[5];   //5
 
-digitalWrite(13,HIGH);
-/*
+ // digitalWrite(13,HIGH);
+
     mode = 2;
     if(mode == 2)
     {
-      onRecieved();
+     //onRecieved();
+      //serialEvent();
+      
+    testMotora();
+
+    //  senzor();
     }
-*/
+
 
     if(mode == 0)
     {
@@ -182,7 +193,7 @@ digitalWrite(13,HIGH);
       mode = 0;
     }
 
-delay(500);
+  delay(500);
 
 }
 
@@ -195,45 +206,86 @@ delay(500);
 /////////////////////////////////////////////SERIAL DATA RECIEVED HANDLER
 //////////////////////////////////////////////////////////////////////
 
-//void serialEvent(){
-//
-//    /* String podaci = Serial.readString();
-//     char *data;
-//    podaci.toCharArray(data,3);
-//    if(data[0] == 'C')
-//    {
-//      */
-//      if(Serial.read() == 2000)
-//      {
-//        digitalWrite(13,LOW);
-//        mode++;
-//                delay(100);
-//      }
-//
-//
-//}
-
-
 /*
-void onRecieved()
+void serialEvent()
 {
 
+for(int i = 0; i < 10; i++)
+  {
+        digitalWrite(13, LOW);
+        delay(20);
+        digitalWrite(13, HIGH);
+        delay(20);
+  }
+}
+*/
+
+/*
+void serialEvent(){
+
+    char data[50];
+    static int pos = 0;
+    
+    int i = 1;
 
 
-        if (Serial.available() > 0) {
+    if(data[0] == '<')
+    {
+      while(data[i] != '>')
+      {
+          data[pos] = Serial.read();
+          i++;
+      }
+
+      data[pos +1] = '\n';
+    }
+
+Serial.println(data);
+
+    for(int i= 0; i< data[i] != '\n' ; i++)
+    {
+        
+        digitalWrite(13, LOW);
+        delay(100);
+        digitalWrite(13, HIGH);
+        delay(100);
+    }
+
+}
+
+*/
+
+
+
+void onRecieved()
+{
+    char data[50];
+    static int pos = 0;
+    
+    int i = 1;
+
+        digitalWrite(13,HIGH);
+
+        if (Serial.available() > 0) 
+        {
                 // read the incoming byte:
 
-                // say what you got:
-                Serial.print("I received: ");
-                Serial.println(Serial.read());
+          if(data[0] == '<')
+          {
+            while(data[i] != '>')
+            {
+             data[pos] = Serial.read();
+               i++;
+            }
+
+            data[pos + 1] = '\n';
+          }              
                 digitalWrite(13,HIGH);
                 delay(100);
                 digitalWrite(13,LOW);
                 delay(100);
         }
-
 }
-*/
 
 ///////////////////////////////////////////////////////////////////////////
 ///////////////////////////////////////////////////////INTERRUPT HANDLERS
@@ -242,12 +294,14 @@ void onRecieved()
 //interupt handler za tipku za prominu moda
 void modeChangeHandler()
 {
+
     mode++;
 }
 
 //interupt handler za tipku joysticka
 void positionRememberHandler()
 {
+
   savedPosition.horizontal = horizontal.read();
   savedPosition.vertical = vertical.read();
 }
@@ -265,12 +319,40 @@ void aMode(int *val)
     digitalWrite(YELLOW_LED, HIGH);
     digitalWrite(BLUE_LED, LOW);
 
-    digitalWrite(RELAY, LOW);
+    digitalWrite(RELAY, HIGH);
+
 
     ocitavanjeSenzora(val);
     ispisVrijednostiSenzora(val);
 
   }
+}
+
+void senzor()
+{
+    Serial.print("Analogni 0 ");
+    Serial.print(analogRead(0));
+    Serial.print("\t ");
+
+    Serial.print("Analogni 1 ");
+    Serial.print(analogRead(1));
+    Serial.print("\t ");
+
+    Serial.print("Analogni 2 ");
+    Serial.print(analogRead(2));
+    Serial.print("\t ");
+
+    Serial.print("Analogni 3 ");
+    Serial.print(analogRead(3));
+    Serial.print("\t ");
+
+    Serial.print("Analogni 4 ");
+    Serial.print(analogRead(4));
+    Serial.print("\t ");
+
+    Serial.print("Analogni 5 ");
+    Serial.print(analogRead(5));
+    Serial.print("\n ");
 }
 
 void mMode()
@@ -282,9 +364,9 @@ void mMode()
     digitalWrite(YELLOW_LED, LOW);
     digitalWrite(BLUE_LED, HIGH);
 
-    digitalWrite(RELAY, HIGH);
+    digitalWrite(RELAY, LOW);
 
-    Serial.print(analogRead(3));
+    Serial.print(analogRead(COMMON_PIN));
     Serial.print(" ");
     Serial.println(analogRead(4));
   }
@@ -310,6 +392,7 @@ void automaticMode(int* val)
 
 float mirenjeNaponaNaPanelu()
 {
+
   return analogRead(5) * (5.0 / 1023);
 }
 
@@ -348,8 +431,9 @@ void ispisVrijednostiSenzora(int val[])
 
 void joystickanje()
 {
-  int x = analogRead(4);
-  int y = analogRead(5);
+
+  int x = analogRead(COMMON_PIN);
+  int y = analogRead(4);
   int remember = digitalRead(joystick_rememberPosition);
 
   int x_position = map(x, 0, 1023, 0, 180);
@@ -426,11 +510,8 @@ void prominaPolozaja(int val[])
 
 Angle pomeranje(int val[])
 {
-  int left = val[0];
-  int up = val[1];
-  int right = val[2];
-  int down = val[3];
   Angle platformAngle;
+  int up,down,left,right;
 
   //vertical aligment
 
@@ -455,7 +536,7 @@ void ocitavanjeSenzora(int *val)
 {
   for (int i = 0; i < 4; i++)
   {
-    val[i] = analogRead(pins[i]);
+    val[i] = 1023 - analogRead(pins[i]);
   }
 }
 
