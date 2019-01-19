@@ -1,7 +1,7 @@
 # Sun-Follower
 
 Light follower made like shield for Arduino Uno, using 2 servos for positioning solar head with solar panel and 4 light resistors. Its made so that Arduino could be removed and available for other purposes. All parts except Arduino and other components are designed by me in CAD tools (AutoCad, BricsCAD), sliced with CURA and printed on Ultramaker2. 
-Ligth follower has two modes of work, manual and automatic, switching between modes is done using switch botton, there are two leds representing each working mode.
+Ligth follower has two modes of work, manual and automatic, switching between modes is done using switch botton or using visualisation program, there are two leds representing each working mode.
 
 ![3D model in CAD](https://github.com/Stips5/Sun-Follower/blob/master/imgs/cad_3d_model.png)
 
